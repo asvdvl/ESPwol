@@ -1,6 +1,4 @@
 ---@diagnostic disable: undefined-global
-print('start exec init.lua')
-
 wifi.setmode(wifi.STATION)
 Station_cfg={}
 Station_cfg.ssid = "xxx"
@@ -25,8 +23,8 @@ wifi.eventmon.register(wifi.eventmon.STA_GOT_IP,
 
 gpio.mode(1, gpio.OUTPUT)
 gpio.mode(2, gpio.OUTPUT)
-gpio.mode(5, gpio.INPUT)
-gpio.mode(6, gpio.INPUT)
+gpio.mode(5, gpio.INPUT, gpio.PULLUP)
+gpio.mode(6, gpio.INPUT, gpio.PULLUP)
 gpio.mode(4, gpio.OUTPUT)
 
 waitWifiConnect = gpio.pulse.build( {
@@ -39,4 +37,3 @@ waitWifiConnect = gpio.pulse.build( {
 waitWifiConnect:start(function() end)
 
 dofile('srv.lua')
-print('init.lua fin')

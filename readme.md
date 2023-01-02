@@ -4,6 +4,10 @@
 * "press/hold" power button
 * "press/hold" reset button
 
+# using modulses
+* `file gpio gpio_pulse net node tmr uart wifi`
+* try to build youself firmware with this modules if default firmware craches.
+
 ## install
 * turn your nodeMCU device into lua mode
 * download and open this repo in `ESPlorer`
