@@ -10,7 +10,7 @@
         p {
             color: beige;  
             font: 20px Arial, sans-serif; 
-            max-width: 100px;
+            max-width: 200px;
             margin-bottom: 10px;
             margin-top: 10px;
         }
@@ -53,26 +53,72 @@
 <body>
     <div class="center">
         <div>
-            <p>states</p>
-            <div class="inline">
+            <p id="statesText">JS disabled</p>
+            <div id="indicators" class="inline">
                 <div class="inline">
                     <p class="inline">power:</p>
-                    <span class="dot green"></span>
+                    <span id="dotPower" class="dot"></span>
                 </div>
                 <div class="inline">
                     <p class="inline">hdd:</p>
-                    <span class="dot red"></span>
+                    <span id="dotHdd" class="dot"></span>
                 </div>    
             </div>
         </div>
         <div>
             <div class="inline">
-                <button>power</button>
-                <button>reset</button>
+                <button id="powerButton">power</button>
+                <button id="resetButton">reset</button>
             </div>
         </div>
        
-        <p>latency: </p> 
+        <p id="latency">latency: </p> 
     </div>
+    <script>
+        document.getElementById('statesText').innerHTML = 'states';
+
+        let latencyP = document.getElementById('latency')
+        setInterval(function() {
+            
+            const request = new Request('/status');
+            var start = Date.now();
+            fetch(request)
+                .then((response) => {
+                if (response.status === 200) {
+                    return response.json();
+                } else {
+                    throw new Error('Something went wrong on API server!');
+                }
+            })
+            .then((response) => {
+                var delta = Date.now() - start;
+                latencyP.innerHTML = 'latency: ' + delta;
+                document.getElementById('dotPower').className= 'dot'
+                document.getElementById('dotHdd').className= 'dot'
+                if (response.power) {
+                    document.getElementById('dotPower').className= 'dot green'
+                }
+                if (response.hdd) {
+                    document.getElementById('dotHdd').className= 'dot red'
+                }
+            }).catch((error) => {
+                latencyP.innerHTML = 'Error: '+error;
+            });
+        }, 200);
+
+        var powerButton = document.getElementById("powerButton")
+        var resetButton = document.getElementById("resetButton")
+
+        powerButton.addEventListener('mousedown', function (e) {
+            fetch(new Request('/set?button=power&action=on'));
+        });
+        resetButton.addEventListener('mousedown', function (e) {
+            fetch(new Request('/set?button=reset&action=on'));
+        });
+        document.addEventListener('mouseup', function (e) {
+            fetch(new Request('/set?button=power&action=off'));
+            fetch(new Request('/set?button=reset&action=off'));
+        }); 
+    </script>
 </body>
 </html>
