@@ -1,4 +1,4 @@
-function parseAction(text)
+local function parseAction(text)
     if text == "on" then
         return gpio.HIGH
     elseif text == "off" then
@@ -21,42 +21,47 @@ Srv:listen(80,
                 print("request "..page)
 
                 if page == "/" then
-                    file.open("index.html")
-                    sck:send("HTTP/1.0 200 OK\r\nContent-Type: text/html\r\n\r\n"..file.read(128), function(s) collectgarbage() end)
-
-                    local chunck = file.read()
-                    print(chunck)
-                    while chunck do
-                        sck:send(chunck, function(s) collectgarbage() end)
-                        chunck = file.read()
+                    local currFile = file.open("index.html", "r")
+                    local function sendBlock(localSocket)
+                        local chunck = currFile.read(512)
+                        if chunck then
+                            sck:send(chunck)
+                        else
+                            localSocket:close()
+                            chunck = nil
+                            file.close()
+                        end
                     end
-
-                    file.close()
+                    
+                    sck:send("HTTP/1.0 200 OK\r\nContent-Type: text/html\r\n\r\n"..currFile.read(512))
+                    sck:on("sent", sendBlock)
                 elseif page == "/status" then
                     sck:send("HTTP/1.0 200 OK\r\nAccess-Control-Allow-Origin: *\r\nContent-Type: application/json\r\n\r\n"..'{\"power\":'..tostring(gpio.read(5) == 0)..', \"hdd\":'..tostring(gpio.read(6) == 0)..'}')
                 elseif page == "/set" then
                     local button, action = string.match(payload, "^GET .*\?button=(.*)\&action=(.*) HTTP")
                     print("button "..button)
                     print("action "..action)
-
+                    local head200 = "HTTP/1.0 200 OK\r\nAccess-Control-Allow-Origin: *\r\n"
+                    local head400 = "HTTP/1.0 400 OK\r\nAccess-Control-Allow-Origin: *\r\n"
+                    
                     if button == "power" then
                         local result = parseAction(action)
                         if result == 'err' then
-                            sck:send("HTTP/1.0 400 OK\r\nAccess-Control-Allow-Origin: *\r\n")
+                            sck:send(head400)
                         else
                             gpio.write(1, result)
-                            sck:send("HTTP/1.0 200 OK\r\nAccess-Control-Allow-Origin: *\r\n")
+                            sck:send(head200)
                         end
                     elseif button == "reset" then
                         local result = parseAction(action)
                         if result == 'err' then
-                            sck:send("HTTP/1.0 400 OK\r\nAccess-Control-Allow-Origin: *\r\n")
+                            sck:send(head400)
                         else
                             gpio.write(2, result)
-                            sck:send("HTTP/1.0 200 OK\r\nAccess-Control-Allow-Origin: *\r\n")
+                            sck:send(head200)
                         end
                     else
-                        sck:send("HTTP/1.0 400 OK\r\nAccess-Control-Allow-Origin: *\r\n")
+                        sck:send(head400)
                     end
                 else
                     print(payload)

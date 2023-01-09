@@ -34,6 +34,6 @@ waitWifiConnect = gpio.pulse.build( {
     {[4] = gpio.HIGH, delay=200000, loop = 3, count=100000, min=190000, max=210000}
 })
 
-waitWifiConnect:start(function() end)
+waitWifiConnect:start(function() waitWifiConnect = nil end)
 
 dofile('srv.lua')
