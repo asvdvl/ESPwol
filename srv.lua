@@ -39,10 +39,15 @@ Srv:listen(80,
                     sck:send("HTTP/1.0 200 OK\r\nAccess-Control-Allow-Origin: *\r\nContent-Type: application/json\r\n\r\n"..'{\"power\":'..tostring(gpio.read(5) == 0)..', \"hdd\":'..tostring(gpio.read(6) == 0)..'}')
                 elseif page == "/set" then
                     local button, action = string.match(payload, "^GET .*\?button=(.*)\&action=(.*) HTTP")
-                    print("button "..button)
-                    print("action "..action)
                     local head200 = "HTTP/1.0 200 OK\r\nAccess-Control-Allow-Origin: *\r\n"
                     local head400 = "HTTP/1.0 400 OK\r\nAccess-Control-Allow-Origin: *\r\n"
+                    
+                    if not button or not action then
+                        sck:send(head400)
+                        return
+                    end
+                    print("button "..button)
+                    print("action "..action)
                     
                     if button == "power" then
                         local result = parseAction(action)
