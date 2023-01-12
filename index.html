@@ -104,20 +104,19 @@
             }).catch((error) => {
                 latencyP.innerHTML = 'Error: '+error;
             });
-        }, 200);
+        }, 1000);
 
         var powerButton = document.getElementById("powerButton")
         var resetButton = document.getElementById("resetButton")
 
         powerButton.addEventListener('mousedown', function (e) {
-            fetch(new Request('/set?button=power&action=on'));
+            fetch(new Request('/set/power/on'));
         });
         resetButton.addEventListener('mousedown', function (e) {
-            fetch(new Request('/set?button=reset&action=on'));
+            fetch(new Request('/set/reset/on'));
         });
         document.addEventListener('mouseup', function (e) {
-            fetch(new Request('/set?button=power&action=off'));
-            fetch(new Request('/set?button=reset&action=off'));
+            fetch(new Request('/set/all/off'));
         }); 
     </script>
 </body>
