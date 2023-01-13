@@ -71,43 +71,14 @@
                 <button id="resetButton">reset</button>
             </div>
         </div>
-       
-        <p id="latency">latency: </p> 
     </div>
     <script>
-        document.getElementById('statesText').innerHTML = 'states';
-
-        let latencyP = document.getElementById('latency')
-        setInterval(function() {
-            
-            const request = new Request('/status');
-            var start = Date.now();
-            fetch(request)
-                .then((response) => {
-                if (response.status === 200) {
-                    return response.json();
-                } else {
-                    throw new Error('Something went wrong on API server!');
-                }
-            })
-            .then((response) => {
-                var delta = Date.now() - start;
-                latencyP.innerHTML = 'latency: ' + delta;
-                document.getElementById('dotPower').className= 'dot'
-                document.getElementById('dotHdd').className= 'dot'
-                if (response.power) {
-                    document.getElementById('dotPower').className= 'dot green'
-                }
-                if (response.hdd) {
-                    document.getElementById('dotHdd').className= 'dot red'
-                }
-            }).catch((error) => {
-                latencyP.innerHTML = 'Error: '+error;
-            });
-        }, 1000);
+        document.getElementById('statesText').innerHTML = 'status: can\'t get led status';
 
         var powerButton = document.getElementById("powerButton")
         var resetButton = document.getElementById("resetButton")
+        var isSseWork = false
+        var sseTimer
 
         powerButton.addEventListener('mousedown', function (e) {
             fetch(new Request('/set/power/on'));
@@ -118,6 +89,71 @@
         document.addEventListener('mouseup', function (e) {
             fetch(new Request('/set/all/off'));
         }); 
+
+        var eventSource = new EventSource('/status/sse');
+        eventSource.onopen = function(e) {
+            console.log("Connection establish");
+            document.getElementById('statesText').innerHTML = 'status: online';
+            isSseWork = true;
+        };
+        eventSource.onerror = function(e) {
+        if (this.readyState == EventSource.CONNECTING) {
+            console.log("Connection error, reconnect");
+            document.getElementById('statesText').innerHTML = 'status: can\'t get led status, try to reconnect';
+            isSseWork = false;
+        } else {
+            console.log("Error: " + this.readyState);
+            document.getElementById('statesText').innerHTML = 'status: can\'t get led status, try to reconnect, error: ' + this.readyState;
+            isSseWork = false;
+        }
+        };
+        eventSource.onmessage = function(e) {
+            document.getElementById('statesText').innerHTML = 'status: online';
+            if (sseTimer != null) {
+                clearTimeout(sseTimer);
+            }
+            isSseWork = true;
+            const states = JSON.parse(e.data);
+
+            document.getElementById('dotPower').className= 'dot'
+            document.getElementById('dotHdd').className= 'dot'
+            if (states.power) {
+                document.getElementById('dotPower').className= 'dot green'
+            }
+            if (states.hdd) {
+                document.getElementById('dotHdd').className= 'dot red'
+            }
+            sseTimer = setTimeout(() => {document.getElementById('statesText').innerHTML = 'status: sse not send data in 2 seconds'; sSseWork = false;}, 2000)
+        };
+
+        setInterval(function() {
+            if (!isSseWork) {
+                const request = new Request('/status');
+                var start = Date.now();
+                fetch(request)
+                    .then((response) => {
+                    if (response.status === 200) {
+                        return response.json();
+                    } else {
+                        document.getElementById('statesText').innerHTML = 'status(pooling): wrong json format';
+                        throw new Error('Something went wrong on API server!');
+                    }
+                })
+                .then((response) => {
+                    document.getElementById('statesText').innerHTML = 'status(pooling): online';
+                    document.getElementById('dotPower').className= 'dot'
+                    document.getElementById('dotHdd').className= 'dot'
+                    if (response.power) {
+                        document.getElementById('dotPower').className= 'dot green'
+                    }
+                    if (response.hdd) {
+                        document.getElementById('dotHdd').className= 'dot red'
+                    }
+                }).catch((error) => {
+                    document.getElementById('statesText').innerHTML = 'status(pooling): error '+ error;
+                });
+            }
+        }, 1000);
     </script>
 </body>
 </html>

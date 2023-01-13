@@ -1,12 +1,9 @@
 ---@diagnostic disable: undefined-global
 wifi.setmode(wifi.STATION)
-Station_cfg={}
-Station_cfg.ssid = "xxx"
-Station_cfg.pwd = "xxx"
-Station_cfg.save = false
-wifi.sta.config(Station_cfg)
 
-wifi.eventmon.register(wifi.eventmon.STA_CONNECTED, 
+dofile('config.lua')
+wifi.sta.config(Station_cfg)
+wifi.eventmon.register(wifi.eventmon.STA_CONNECTED,
     function(T)
         print("\n\tSTA - CONNECTED".."\n\tSSID: "..T.SSID.."\n\tBSSID: "..T.BSSID.."\n\tChannel: "..T.channel)
         WaitWifiConnect:update(2, { loop=3 })
@@ -17,7 +14,6 @@ wifi.eventmon.register(wifi.eventmon.STA_GOT_IP,
     function(T)
         print("\n\tSTA - GOT IP".."\n\tIP: "..T.IP.."\n\tnetmask: "..T.netmask.."\n\tgateway: "..T.gateway)
         WaitWifiConnect:update(4, { loop=5 })
-        WaitWifiConnect = nil
     end
 )
 
@@ -36,6 +32,6 @@ WaitWifiConnect = gpio.pulse.build( {
     {[4] = gpio.HIGH, delay=9000000, loop = 5, count=10000000, min=8900000, max=9100000}
 })
 
-WaitWifiConnect:start(function() WaitWifiConnect = nil end)
+WaitWifiConnect:start(function() end)
 
 dofile('srv.lua')

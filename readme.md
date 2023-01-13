@@ -15,8 +15,9 @@ P.S. The project planned to listen for packets to find the "magic packet" (true 
 ## install
 * turn your nodeMCU device into lua mode
 * download and open this repo in `ESPlorer`
-* edit your wifi credentials in `init.lua`
-* use `ESPlorer` to load `index.html, init.lua and srv.lua` into esp using the "Load..." button located under the built-in code editor
+* edit your wifi credentials in `config.lua`
+* use `ESPlorer` connect to your ESP
+* load `index.html, init.lua, config.lua and srv.lua` into esp using the "Upload..." button located under the built-in code editor
 * reset your esp and find her ip address in the console
 * go to `http://<ESP-ADDR>` and enjoy!
 
@@ -27,6 +28,7 @@ P.S. The project planned to listen for packets to find the "magic packet" (true 
 
 ## Mini documentation
 ### files for ESP
+* `config.lua` - CONFIG FILE, wifi credentials
 * `index.html` - main web file with some css, js and...html, esp send him on `/` request
 * `init.lua` - main load module, initialize wifi, dhcp client, load `srv.lua`
 * `srv.lua` - web server module
